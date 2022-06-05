@@ -9,12 +9,12 @@ const logger = createLogger('todosStorage')
 export class TodosStorage {
   constructor(
     private readonly s3 = new XAWS.S3({ signatureVersion: 'v4' }),
-    private readonly bucketName = process.env.TODOS_IMAGES_S3_BUCKET,
-    private readonly urlExpiration = process.env.TODOS_SIGNED_URL_EXPIRATION
+    private readonly bucketName = process.env.ATTACHMENT_S3_BUCKET,
+    private readonly urlExpiration = process.env.SIGNED_URL_EXPIRATION
   ) {}
 
   async deleteObject(todoId: string) {
-    logger.info('Delete object in bucket')
+    logger.warn('Delete an object in bucket')
 
     await this.s3
       .deleteObject({
@@ -24,7 +24,7 @@ export class TodosStorage {
       .promise()
   }
 
-  async createAttachmentPresignedUrl(todoId: string) {
+  async createPresignedUrl(todoId: string) {
     return this.s3.getSignedUrl('putObject', {
       Bucket: this.bucketName,
       Key: todoId,
