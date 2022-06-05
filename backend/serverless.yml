@@ -44,7 +44,7 @@ custom:
         title: Todos API
         description: Serverless application for todos
     models:
-      - name: TodoRequest
+      - name: CreateTodoRequest
         contentType: application/json
         schema: ${file(models/create-todo-model.json)}
 
@@ -75,9 +75,15 @@ functions:
           path: todos
           cors: true
           authorizer: Auth
+          reqValidatorName: RequestBodyValidator
           request:
             schemas:
               application/json: ${file(models/create-todo-model.json)}
+          documentation:
+            summary: Create a new todo
+            description: Create a new todo
+            requestModels:
+              'application/json': CreateTodoRequest
     iamRoleStatements:
       - Effect: Allow
         Action: 
@@ -94,6 +100,7 @@ functions:
           path: todos/{todoId}
           cors: true
           authorizer: Auth
+          reqValidatorName: RequestBodyValidator
           request:
             schemas:
               application/json: ${file(models/update-todo-model.json)}
