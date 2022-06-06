@@ -1,4 +1,4 @@
-service: hoamx1-serverless
+service: hoamx1-serverless-capstone
 
 plugins:
   - serverless-webpack
@@ -22,8 +22,9 @@ provider:
   environment:
     TODOS_TABLE: Todos-${self:provider.stage}
     TODOS_CREATED_AT_INDEX: CreatedAtIndex
-    ATTACHMENT_S3_BUCKET: serverless-c4-hoamx1-${self:provider.stage}
+    ATTACHMENT_S3_BUCKET: serverless-capstone-hoamx1-${self:provider.stage}
     SIGNED_URL_EXPIRATION: 300
+    CONNECTIONS_TABLE: Connections-${self:provider.stage}
 
   logs:
     restApi: true
@@ -148,6 +149,31 @@ functions:
           - dynamodb:Query
           - dynamodb:UpdateItem
         Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TODOS_TABLE}
+
+  ConnectHandler:
+    handler: src/lambda/websocket/connect.handler
+    events:
+      - websocket:
+          route: $connect
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Scan
+          - dynamodb:PutItem
+        Resource: arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.CONNECTIONS_TABLE}
+
+  DisconnectHandler:
+    handler: src/lambda/websocket/disconnect.handler
+    events:
+      - websocket:
+          route: $disconnect
+    iamRoleStatements:
+      - Effect: Allow
+        Action:
+          - dynamodb:Scan
+          - dynamodb:DeleteItem
+        Resource: arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.CONNECTIONS_TABLE}
+
 resources:
   Resources:
 
@@ -221,6 +247,20 @@ resources:
               Action: s3:GetObject
               Resource: arn:aws:s3:::${self:provider.environment.ATTACHMENT_S3_BUCKET}/*
         Bucket: !Ref AttachmentsBucket
+
+    WebSocketConnectionsDynamoDBTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: id
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:provider.environment.CONNECTIONS_TABLE}
 
     RequestBodyValidator:
       Type: AWS::ApiGateway::RequestValidator
