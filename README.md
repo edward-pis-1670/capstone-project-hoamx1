@@ -250,7 +250,7 @@ cd backend
 npm install
 sls deploy -v
 ```
-
+- To check websocket working or not, using wscat to connect. Then when a new image is created, a new message shown on websocket terminal
 ## Frontend
 
 To run a client application first edit the `client/src/config.ts` file to set correct parameters. And then run the following commands:
